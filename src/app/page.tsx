@@ -49,6 +49,28 @@ function getNowVenezuelaTimestamp() {
   return Math.floor(venezuelaTime.getTime() / 1000)
 }
 
+// Cloudinary config
+const CLOUDINARY_CLOUD_NAME = "dzwnkz2fj".toLowerCase(); // The apikey is not the cloudName! You must use your Cloudinary cloud name.
+const CLOUDINARY_UPLOAD_PRESET = "quinielas"; // You must create this unsigned preset in your Cloudinary dashboard.
+const CLOUDINARY_FOLDER = "images"; // Your asset folder
+
+// Helper to upload to Cloudinary
+async function uploadImageToCloudinary(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  formData.append("folder", CLOUDINARY_FOLDER);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Error al subir imagen");
+  const data = await res.json();
+  return data.secure_url; // Public URL
+}
+
 export default function Home() {
   const [rounds, setRounds] = useState<Rounds>({})
   const [loading, setLoading] = useState(true)
@@ -62,6 +84,8 @@ export default function Home() {
   const [userEmail, setUserEmail] = useState("")
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   const [paymentPreview, setPaymentPreview] = useState<string | null>(null)
+
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -113,12 +137,17 @@ export default function Home() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (submitting) return; // evita doble envío
+    setSubmitting(true);
+    
     // Validación de campos de usuario
     if (!userName.trim() || !userPhone.trim() || !userEmail.trim()) {
       toast("Completa todos los campos del usuario", {
         description: "Nombre, teléfono y email son obligatorios",
         style: { backgroundColor: 'red', color: 'white' },
       })
+      setSubmitting(false);
       return
     }
     if (!paymentProof) {
@@ -126,6 +155,7 @@ export default function Home() {
         description: "Debes subir una imagen del comprobante.",
         style: { backgroundColor: 'red', color: 'white' },
       })
+      setSubmitting(false);
       return
     }
     // Validar sólo partidos NO iniciados de TODAS las rondas
@@ -140,16 +170,8 @@ export default function Home() {
     }
 
     try {
-      // 1. Subir la imagen y obtener la URL pública
-      // Suponiendo que tienes un endpoint /api/upload que responde { url: "https://..." }
-      const imageFormData = new FormData()
-      imageFormData.append('file', paymentProof)
-      const uploadRes = await fetch('/api/upload', {
-        method: "POST",
-        body: imageFormData,
-      })
-      if (!uploadRes.ok) throw new Error("Error subiendo imagen")
-      const { url: paymentProofUrl } = await uploadRes.json()
+      // 1. Subir la imagen a Cloudinary y obtener la URL pública
+      const paymentProofUrl = await uploadImageToCloudinary(paymentProof);
 
       // 2. Prepara los picks como array
       const picksArray = Object.entries(picks).map(([eventId, pick]) => {
@@ -181,6 +203,10 @@ export default function Home() {
         style: { backgroundColor: 'green', color: 'white' },
       })
 
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000)
+
       // Limpia el formulario si quieres
       setUserName("")
       setUserEmail("")
@@ -200,22 +226,22 @@ export default function Home() {
     <main className="min-h-screen bg-[#00061f] py-12 px-4">
       <div className="max-w-6xl mx-auto">
 
+        
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <div className="flex justify-center mb-4">
-            <Trophy className="h-16 w-16 text-[#ffcc00]" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">Quiniela Deportiva</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#ffcc00] mb-4 tracking-tight">Quiniela Deportiva Betfine24</h1>
           <p className="text-gray-300 max-w-2xl mx-auto text-lg">
             Predice los resultados de los partidos y compite con tus amigos
           </p>
         </motion.div>
 
+        {/* Datos de usuario
         <DebugControls horaHoy={horaHoy} setHoraHoy={setHoraHoy} />
+        */}
 
         {loading && (
           <div className="flex justify-center py-12">
@@ -380,10 +406,20 @@ export default function Home() {
               <Button
                 type="submit"
                 size="lg"
-                className="bg-[#ffcc00] hover:bg-[#ffcc00]/80 text-[#00061f] font-bold text-lg px-12 py-6 h-auto rounded-xl shadow-lg shadow-black/20 transition-all duration-300 hover:scale-105"
+                disabled={submitting}
+                className="bg-[#ffcc00] hover:bg-[#ffcc00]/80 text-[#00061f] font-bold text-lg px-12 py-6 h-auto rounded-xl shadow-lg shadow-black/20 transition-all duration-300 hover:scale-105 flex items-center justify-center"
               >
-                <Trophy className="mr-2 h-5 w-5" />
-                Enviar Quiniela
+                {submitting ? (
+                  <>
+                    <span className="loader mr-2"></span> {/* Loader CSS */}
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="mr-2 h-5 w-5" />
+                    Enviar Quiniela
+                  </>
+                )}
               </Button>
             </motion.div>
           </form>

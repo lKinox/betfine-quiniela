@@ -130,3 +130,17 @@
   background-color: green;
   color: white;
 }
+
+.loader {
+  border: 2px solid #fff3;
+  border-top: 2px solid #00061f;
+  border-radius: 50%;
+  width: 1.2em;
+  height: 1.2em;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
