@@ -22,3 +22,9 @@ model User {
   username         String   @unique
   password         String
 }
+
+model Rounds {
+  id    String   @id
+  round String   @unique
+  data  Json
+}

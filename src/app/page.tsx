@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { MatchCard } from "@/components/match-card"
-import { DebugControls } from "@/components/debug-controls"
 
 type Team = {
   id: number
@@ -24,37 +23,30 @@ type Event = {
 }
 
 type Rounds = {
-  [round: string]: Event[]
+  [round: string]: {
+    events: Event[]
+  }
 }
 
-const ROUND_URLS = [
-  {
-    round: "Ronda 1",
-    url: "https://www.sofascore.com/api/v1/unique-tournament/357/season/69619/events/round/1"
-  },
-  {
-    round: "Ronda 2",
-    url: "https://www.sofascore.com/api/v1/unique-tournament/357/season/69619/events/round/2"
-  },
-  {
-    round: "Ronda 3",
-    url: "https://www.sofascore.com/api/v1/unique-tournament/357/season/69619/events/round/3"
-  }
+const ROUND_LIST = [
+  { round: "Ronda 1", num: 1 },
+  { round: "Ronda 2", num: 2 },
+  { round: "Ronda 3", num: 3 }
 ]
 
 function getNowVenezuelaTimestamp() {
-  const now = new Date()
+  const now = new Date();
   // UTC-4
-  const venezuelaTime = new Date(now.getTime() - 4 * 60 * 60 * 1000)
-  return Math.floor(venezuelaTime.getTime() / 1000)
+  const venezuelaTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+  return Math.floor(venezuelaTime.getTime() / 1000);
 }
 
 // Cloudinary config
-const CLOUDINARY_CLOUD_NAME = "dzwnkz2fj".toLowerCase(); // The apikey is not the cloudName! You must use your Cloudinary cloud name.
-const CLOUDINARY_UPLOAD_PRESET = "quinielas"; // You must create this unsigned preset in your Cloudinary dashboard.
-const CLOUDINARY_FOLDER = "images"; // Your asset folder
+const CLOUDINARY_CLOUD_NAME = "dzwnkz2fj".toLowerCase(); // Tu cloud name
+const CLOUDINARY_UPLOAD_PRESET = "quinielas"; // Tu unsigned preset de Cloudinary
+const CLOUDINARY_FOLDER = "images"; // Tu folder
 
-// Helper to upload to Cloudinary
+// Helper para subir imagen a Cloudinary
 async function uploadImageToCloudinary(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
@@ -84,7 +76,6 @@ export default function Home() {
   const [userEmail, setUserEmail] = useState("")
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   const [paymentPreview, setPaymentPreview] = useState<string | null>(null)
-
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -98,18 +89,9 @@ export default function Home() {
     async function fetchAllRounds() {
       setLoading(true)
       try {
-        const results = await Promise.all(
-          ROUND_URLS.map(async ({ round, url }) => {
-            const res = await fetch(url)
-            const data = await res.json()
-            return { round, events: data.events || [] }
-          })
-        )
-        const newRounds: Rounds = {}
-        results.forEach(({ round, events }) => {
-          newRounds[round] = events
-        })
-        setRounds(newRounds)
+        const res = await fetch("/api/rounds")
+        const data = await res.json()
+        setRounds(data)
       } catch (err) {
         setRounds({})
       }
@@ -140,7 +122,7 @@ export default function Home() {
 
     if (submitting) return; // evita doble envío
     setSubmitting(true);
-    
+
     // Validación de campos de usuario
     if (!userName.trim() || !userPhone.trim() || !userEmail.trim()) {
       toast("Completa todos los campos del usuario", {
@@ -159,13 +141,15 @@ export default function Home() {
       return
     }
     // Validar sólo partidos NO iniciados de TODAS las rondas
-    const allEvents: Event[] = Object.values(rounds).flat()
-    const partidosNoIniciados = allEvents.filter((event) => now < event.startTimestamp)
-    if (partidosNoIniciados.some((p) => !picks[p.id])) {
+    // Recolecta todos los eventos de todas las rondas:
+    const allEvents: Event[] = Object.values(rounds).flatMap(rd => Array.isArray(rd.events) ? rd.events : []);
+    const partidosNoIniciados = allEvents.filter((event: Event) => now < event.startTimestamp)
+    if (partidosNoIniciados.some((p: Event) => !picks[p.id])) {
       toast("Error: Selección Incompleta", {
         description: "Debes hacer una selección en todos los partidos que no han iniciado.",
         style: { backgroundColor: 'red', color: 'white' },
       });
+      setSubmitting(false);
       return;
     }
 
@@ -220,13 +204,12 @@ export default function Home() {
         style: { backgroundColor: 'red', color: 'white' },
       })
     }
+    setSubmitting(false);
   }
 
   return (
     <main className="min-h-screen bg-[#00061f] py-12 px-4">
       <div className="max-w-6xl mx-auto">
-
-        
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -239,10 +222,6 @@ export default function Home() {
           </p>
         </motion.div>
 
-        {/* Datos de usuario
-        <DebugControls horaHoy={horaHoy} setHoraHoy={setHoraHoy} />
-        */}
-
         {loading && (
           <div className="flex justify-center py-12">
             <div className="flex flex-col items-center gap-4">
@@ -252,7 +231,7 @@ export default function Home() {
           </div>
         )}
 
-        {!loading && Object.values(rounds).flat().length === 0 && (
+        {!loading && Object.values(rounds).every(rd => !rd.events?.length) && (
           <Card className="p-8 text-center bg-[#0b174d]/80 backdrop-blur-sm border-[#0b174d]">
             <AlertCircle className="h-12 w-12 text-[#ffcc00] mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">No hay partidos disponibles</h3>
@@ -260,7 +239,7 @@ export default function Home() {
           </Card>
         )}
 
-        {!loading && Object.values(rounds).flat().length > 0 && (
+        {!loading && Object.values(rounds).some(rd => rd.events?.length > 0) && (
           <form onSubmit={handleSubmit} className="space-y-10">
             {/* Datos de usuario */}
             <motion.div
@@ -337,25 +316,22 @@ export default function Home() {
             </motion.div>
 
             {/* Secciones de rondas */}
-            {ROUND_URLS.map(({ round }) => {
-              const events = rounds[round] || []
-              if (events.length === 0) return null
-              const upcomingMatches = events.filter((event) => now < event.startTimestamp)
-              const pastMatches = events.filter((event) => now >= event.startTimestamp)
+            {ROUND_LIST.map(({ round }) => {
+              const roundData = rounds[round];
+              const events: Event[] = Array.isArray(roundData?.events) ? roundData.events : [];
+              if (events.length === 0) return null;
+              const upcomingMatches = events.filter((event: Event) => now < event.startTimestamp);
+              const pastMatches = events.filter((event: Event) => now >= event.startTimestamp);
               return (
                 <section key={round} className="mb-16">
                   {upcomingMatches.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
+                    <motion.div>
                       <div className="flex items-center gap-3 mb-6">
                         <Timer className="h-6 w-6 text-[#ffcc00]" />
                         <h2 className="text-2xl font-bold text-white">{round}: Partidos Próximos</h2>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                        {upcomingMatches.map((match) => (
+                        {upcomingMatches.map((match: Event) => (
                           <MatchCard
                             key={match.id}
                             match={match}
@@ -369,18 +345,13 @@ export default function Home() {
                   )}
 
                   {pastMatches.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                      className="mt-8"
-                    >
+                    <motion.div className="mt-8">
                       <div className="flex items-center gap-3 mb-6">
                         <CheckCircle2 className="h-6 w-6 text-gray-400" />
                         <h2 className="text-2xl font-bold text-gray-300">{round}: Partidos Cerrados</h2>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 opacity-70">
-                        {pastMatches.map((match) => (
+                        {pastMatches.map((match: Event) => (
                           <MatchCard
                             key={match.id}
                             match={match}
@@ -393,7 +364,7 @@ export default function Home() {
                     </motion.div>
                   )}
                 </section>
-              )
+              );
             })}
 
             {/* Submit Button */}
@@ -411,7 +382,7 @@ export default function Home() {
               >
                 {submitting ? (
                   <>
-                    <span className="loader mr-2"></span> {/* Loader CSS */}
+                    <span className="loader mr-2"></span>
                     Enviando...
                   </>
                 ) : (

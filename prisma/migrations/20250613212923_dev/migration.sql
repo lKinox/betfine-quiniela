@@ -16,5 +16,15 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL
 );
 
+-- CreateTable
+CREATE TABLE "Rounds" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "round" TEXT NOT NULL,
+    "data" JSONB NOT NULL
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Rounds_round_key" ON "Rounds"("round");
