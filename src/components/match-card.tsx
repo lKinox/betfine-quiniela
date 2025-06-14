@@ -48,7 +48,7 @@ return (
         <div className="w-full flex items-center justify-between mb-1">
             {/* Home */}
             <div className="flex flex-col items-center w-16">
-            <img src={`https://www.sofascore.com/api/v1/team/${match.homeTeam.id}/image`} alt={match.homeTeam.name} className="w-6 h-6 rounded-full mb-0.5" />
+            <img src={`https://img.sofascore.com/api/v1/team/${match.homeTeam.id}/image`} alt={match.homeTeam.name} className="w-6 h-6 rounded-full mb-0.5" />
             <span className="text-white truncate font-medium">{match.homeTeam.nameCode}</span>
             </div>
             {/* VS and time */}
@@ -59,7 +59,7 @@ return (
             </div>
             {/* Away */}
             <div className="flex flex-col items-center w-16">
-            <img src={`https://www.sofascore.com/api/v1/team/${match.awayTeam.id}/image`} alt={match.awayTeam.name} className="w-6 h-6 rounded-full mb-0.5" />
+            <img src={`https://img.sofascore.com/api/v1/team/${match.awayTeam.id}/image`} alt={match.awayTeam.name} className="w-6 h-6 rounded-full mb-0.5" />
             <span className="text-white truncate font-medium">{match.awayTeam.nameCode}</span>
             </div>
         </div>
