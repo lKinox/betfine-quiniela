@@ -332,7 +332,7 @@ export default function Home() {
                         04142844395
                       </p>
                       <span className="flex flex-row bg-[#223a6e] text-white px-3 py-2 rounded justify-between">
-                        <span className="font-bold">BDV: 0102</span> 
+                        <span className="font-bold">BDV: 0102</span>
                         <span className="font-bold">Bancamiga: 0172</span>
                         <span className="font-bold">Mercantil: 0104</span>
                       </span>
@@ -413,7 +413,7 @@ export default function Home() {
                             key={match.id}
                             match={match}
                             pick={picks[match.id]}
-                            onPickChange={() => {}}
+                            onPickChange={() => { }}
                             isDisabled={true}
                           />
                         ))}
