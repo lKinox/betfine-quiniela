@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { MatchCard } from "@/components/match-card"
+import Image from "next/image"
 
 type Team = {
   id: number
@@ -77,6 +78,10 @@ export default function Home() {
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   const [paymentPreview, setPaymentPreview] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+
+  const [showMetodos, setShowMetodos] = useState(false);
+  const [showCampos, setShowCampos] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -216,10 +221,7 @@ export default function Home() {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#ffcc00] mb-4 tracking-tight">Quiniela Deportiva Betfine24</h1>
-          <p className="text-gray-300 max-w-2xl mx-auto text-lg">
-            Predice los resultados de los partidos y compite con tus amigos
-          </p>
+          <Image src="/banner-web.jpg" alt="banner" width={3000} height={300} className="w-full rounded-xl" />
         </motion.div>
 
         {loading && (
@@ -284,7 +286,62 @@ export default function Home() {
                 </label>
               </div>
               <div className="flex-1 flex flex-col gap-2 items-center justify-center">
-                <label className="text-white font-semibold flex flex-col gap-2 items-center">
+                {/* Texto Promocional */}
+                <div className="bg-[#223a6e] text-[#ffcc00] p-4 rounded-lg text-center mb-2 text-sm font-bold">
+                  Con tan solo 500ves o 5$, puedes armar tu quiniela para este mundial de clubes. Puedes ser uno de los felices Ganadores
+                </div>
+
+                {/* ACCORDION: Métodos de pago */}
+                <div className="w-full max-w-md">
+                  <button
+                    type="button"
+                    className="w-full flex justify-between items-center bg-[#223a6e] text-white font-semibold px-4 py-2 rounded-t-lg focus:outline-none"
+                    onClick={() => setShowMetodos((prev) => !prev)}
+                  >
+                    Binance y Zelle
+                    <span className="ml-2">{showMetodos ? "▲" : "▼"}</span>
+                  </button>
+                  {showMetodos && (
+                    <div className="bg-[#162447] text-white px-4 py-3 rounded-b-lg border-t border-[#223a6e]">
+                      <div>
+                        <span className="font-bold">Binance:</span> betfi.binance@gmail.com
+                      </div>
+                      <div>
+                        <span className="font-bold">Zelle:</span> experiencegroup247@gmail.com
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ACCORDION: Tres campos */}
+                <div className="w-full max-w-md mt-2">
+                  <button
+                    type="button"
+                    className="w-full flex justify-between items-center bg-[#223a6e] text-white font-semibold px-4 py-2 rounded-t-lg focus:outline-none"
+                    onClick={() => setShowCampos((prev) => !prev)}
+                  >
+                    Pago Móvil
+                    <span className="ml-2">{showCampos ? "▲" : "▼"}</span>
+                  </button>
+                  {showCampos && (
+                    <div className="bg-[#162447] text-white px-4 py-3 rounded-b-lg border-t border-[#223a6e] flex flex-col gap-3">
+                      <p className="bg-[#223a6e] text-white px-3 py-2 rounded">
+                        J501740674
+                      </p>
+                      <p className="bg-[#223a6e] text-white px-3 py-2 rounded">
+                        04142844395
+                      </p>
+                      <span className="flex flex-row bg-[#223a6e] text-white px-3 py-2 rounded justify-between">
+                        <span className="font-bold">BDV: 0102</span> 
+                        <span className="font-bold">Bancamiga: 0172</span>
+                        <span className="font-bold">Mercantil: 0104</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* El resto de tu código */}
+                <label className="text-white font-semibold flex flex-col gap-2 items-center mt-4">
                   Comprobante de pago *
                   <input
                     type="file"
