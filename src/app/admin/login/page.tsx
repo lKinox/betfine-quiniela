@@ -10,13 +10,13 @@ export default function AdminLogin() {
         e.preventDefault()
         setError("")
         const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
         })
         const data = await res.json()
         if (!res.ok) {
-        setError(data.error || "Credenciales inválidas")
+            setError(data.error || "Credenciales inválidas")
         return
         }
         localStorage.setItem("admin_token", data.token)

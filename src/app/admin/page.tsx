@@ -178,9 +178,6 @@ export default function AdminPanel() {
             </tbody>
         </table>
         <div className="mt-2 font-bold text-green-700">Total: {totalPoints} puntos</div>
-        <div className="mt-1 text-xs text-gray-500">
-            (Puedes probar con un partido empatado, ya tienes el evento 101 como empate)
-        </div>
         </div>
     )
 }
