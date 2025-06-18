@@ -334,7 +334,7 @@ export default function Home() {
                       <span className="flex flex-row bg-[#223a6e] text-white px-3 py-2 rounded justify-between">
                         <span className="font-bold">BDV: 0102</span>
                         <span className="font-bold">Bancamiga: 0172</span>
-                        <span className="font-bold">Mercantil: 0104</span>
+                        <span className="font-bold">BNC: 0191</span>
                       </span>
                     </div>
                   )}
